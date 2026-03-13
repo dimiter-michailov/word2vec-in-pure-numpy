@@ -1,20 +1,32 @@
-import time
 import numpy as np
+import time
+from huffman_tree import HuffmanTree
 
-class Skipgram:
-    def __init__(self, token_ids, V_size, context_size, embedding_dim, l_rate=0.025):
+class OptimizedSkipgram:
+    def __init__(self, token_ids, word_frequency, V_size, context_size, embedding_dim, l_rate=0.025):
             self.V_size = V_size
             self.context_size = context_size
             self.embedding_dim = embedding_dim
             self.l_rate = l_rate
             self.pairs = self.make_skipgram_training_pairs(token_ids, self.context_size)
 
+            self.tree = HuffmanTree(word_frequency)
+            print("num tree nodes:", len(self.tree.count))
+            print("word 0 code:", self.tree.word_codes[0])
+            print("word 0 path:", self.tree.word_paths[0])
+            print("word 1 code:", self.tree.word_codes[1])
+            print("word 1 path:", self.tree.word_paths[1])
+
+            self.word_codes = self.tree.word_codes
+            self.word_paths = self.tree.word_paths
+            self.num_internal_nodes = self.V_size - 1
+
             input_bound = np.sqrt(3.0 / self.embedding_dim)
-            output_bound = np.sqrt(3.0 / (self.context_size * self.embedding_dim))
+            output_bound = np.sqrt(3.0 / self.embedding_dim)
             # input_hidden_matrix: (V_size, embedding_dim)
             self.input_hidden_matrix = np.random.uniform(-input_bound, input_bound,(self.V_size, self.embedding_dim)).astype(np.float32)
-            # hidden_output_matrix: (embedding_dim, V_size)
-            self.hidden_output_matrix = np.random.uniform(-output_bound, output_bound,(self.embedding_dim, self.V_size)).astype(np.float32)
+            # hidden_output_matrix: (embedding_dim, num_internal_nodes)
+            self.hidden_output_matrix = np.random.uniform(-output_bound, output_bound,(self.embedding_dim, self.num_internal_nodes)).astype(np.float32)
 
     def make_skipgram_training_pairs(self, token_ids, total_context_size: int):
         """
@@ -64,73 +76,70 @@ class Skipgram:
 
         return vector
 
-    def softmax(self, output_vector):
-        """
-        Takes a vector of pre-softmax logits
-        and returns the softmax probability vector.
-        """
-        max_value = np.max(output_vector)
-        shifted_output = output_vector - max_value
+    def sigmoid(self, score):
+        score = np.asarray(score, dtype=np.float32)
 
-        exp_values = np.exp(shifted_output)
-        sum_exp = np.sum(exp_values)
+        prob = np.empty_like(score, dtype=np.float32)
 
-        post_softmax = exp_values / sum_exp
-        return post_softmax
+        positive = score >= 0
+        prob[positive] = 1.0 / (1.0 + np.exp(-score[positive]))
+
+        exp_score = np.exp(score[~positive])
+        prob[~positive] = exp_score / (1.0 + exp_score)
+
+        return prob
     
-    def loss_function(self, pre_softmax, context):
-            """
-            Computes the loss from the pre-softmax logits.
-            pre_softmax : vector of raw logits u_j
-            context      : true context words id
-            returns     : scalar loss E
-            """
-            max_value = np.max(pre_softmax)
-            shifted_output = pre_softmax - max_value
+    def loss_one_path(self, score, code):
+        probs = self.sigmoid(score)
 
-            sum_exp = np.sum(np.exp(shifted_output))
-
-            E = 0.0
-            for word in context:
-                word_score = shifted_output[word]
-                E += -word_score + np.log(sum_exp)
-
-            return E
+        E = -(code * np.log(probs + 1e-10) + (1.0 - code) * np.log(1.0 - probs + 1e-10))
+        return np.sum(E)
 
     def feedforward(self, center, context):
         # to keep vector sum of all the words used in the context
         hidden = self.input_hidden_matrix[center].copy()
-        pre_softmax = hidden @ self.hidden_output_matrix
-        post_softmax = self.softmax(pre_softmax)
+        
+        E = 0.0
 
-        E = self.loss_function(pre_softmax, context)
+        for target_word in context:
+            path = np.asarray(self.word_paths[target_word], dtype=np.int32)
+            code = np.asarray(self.word_codes[target_word], dtype=np.float32)
 
-        return center, hidden, post_softmax, E
+            node_vectors = self.hidden_output_matrix[:, path]
+            scores = hidden @ node_vectors
+            E += self.loss_one_path(scores, code)
+
+        return center, hidden, E
     
-    def backpropagate(self, post_softmax, hidden, context, center):
+    def backpropagate(self, hidden, context, center):
         """
-        Applies one backpropagation step to the input_hidden_matrix and hidden_output_matrix for the given training pair.
+        Applies one backpropagation step to both to the matricies and the hierarchical softmax for the given training pair.
         """
-        # dE/du_c,j = y_c,j - t_c,j
-        dE_du = len(context) * post_softmax.copy()
-        np.add.at(dE_du, context, -1.0)
+        dE_dh = np.zeros(self.embedding_dim, dtype=np.float32)
 
-        # dE/dw'ij = dE/du_j * h_i
-        # for the whole hidden_output_matrix
-        dE_d_hidden_output_matrix = np.outer(hidden, dE_du)
+        for target_word in context:
+            path = np.asarray(self.word_paths[target_word], dtype=np.int32)
+            code = np.asarray(self.word_codes[target_word], dtype=np.float32)
 
-        # save OLD hidden_output_matrix before updating
-        old_hidden_output_matrix = self.hidden_output_matrix.copy()
+            node_vectors = self.hidden_output_matrix[:, path]
+            scores = hidden @ node_vectors
+            # sig(v_prime_j T hidden)
+            probs = self.sigmoid(scores)
 
-        # w'ij = w'ij - learning_rate * dE/dw'ij
-        self.hidden_output_matrix -= self.l_rate * dE_d_hidden_output_matrix
+            # sig(v_prime_j T hidden) - t_j
+            dE_du_j = probs - code
 
-        # dE/dh_i = SUM_j ( dE/du_j * w'ij )
-        dE_dh = old_hidden_output_matrix @ dE_du
+            # old v_prime_j
+            old_node_vector = node_vectors.copy()
+
+            # v_prime_j = v_prime_j - l_rate * (sig(v_prime_j T hidden) - t_j) T hidden
+            self.hidden_output_matrix[:, path] -= self.l_rate * (hidden[:, None] * dE_du_j[None, :])
+
+            # accumulate dE_dh over all path nodes
+            dE_dh += old_node_vector @ dE_du_j
 
         # dE/dw_ki = dE/dh_i * x_k
         # dE_d_input_hidden_matrix = np.outer(center_vector, dE_dh)
-
         # w_ki = w_ki - learning_rate * dE/dw_ki
         self.input_hidden_matrix[center] -= self.l_rate * dE_dh
 
@@ -147,8 +156,8 @@ class Skipgram:
                 center = p[0]
                 context = p[1]
 
-                center, hidden, post_softmax, E = self.feedforward(center, context)
-                self.backpropagate(post_softmax, hidden, context, center)
+                center, hidden, E = self.feedforward(center, context)
+                self.backpropagate(hidden, context, center)
 
                 total_loss = total_loss + E
                 if i % 50000 == 0:
