@@ -2,31 +2,31 @@ import numpy as np
 import time
 from huffman_tree import HuffmanTree
 
-class OptimizedSkipgram:
+class HierarchicalSkipgram:
     def __init__(self, token_ids, word_frequency, V_size, context_size, embedding_dim, l_rate=0.025):
-            self.V_size = V_size
-            self.context_size = context_size
-            self.embedding_dim = embedding_dim
-            self.l_rate = l_rate
-            self.pairs = self.make_skipgram_training_pairs(token_ids, self.context_size)
+        self.V_size = V_size
+        self.context_size = context_size
+        self.embedding_dim = embedding_dim
+        self.l_rate = l_rate
+        self.pairs = self.make_skipgram_training_pairs(token_ids, self.context_size)
 
-            self.tree = HuffmanTree(word_frequency)
-            print("num tree nodes:", len(self.tree.count))
-            print("word 0 code:", self.tree.word_codes[0])
-            print("word 0 path:", self.tree.word_paths[0])
-            print("word 1 code:", self.tree.word_codes[1])
-            print("word 1 path:", self.tree.word_paths[1])
+        self.tree = HuffmanTree(word_frequency)
+        print("num tree nodes:", len(self.tree.count))
+        print("word 0 code:", self.tree.word_codes[0])
+        print("word 0 path:", self.tree.word_paths[0])
+        print("word 1 code:", self.tree.word_codes[1])
+        print("word 1 path:", self.tree.word_paths[1])
 
-            self.word_codes = self.tree.word_codes
-            self.word_paths = self.tree.word_paths
-            self.num_internal_nodes = self.V_size - 1
+        self.word_codes = self.tree.word_codes
+        self.word_paths = self.tree.word_paths
+        self.num_internal_nodes = self.V_size - 1
 
-            input_bound = np.sqrt(3.0 / self.embedding_dim)
-            output_bound = np.sqrt(3.0 / self.embedding_dim)
-            # input_hidden_matrix: (V_size, embedding_dim)
-            self.input_hidden_matrix = np.random.uniform(-input_bound, input_bound,(self.V_size, self.embedding_dim)).astype(np.float32)
-            # hidden_output_matrix: (embedding_dim, num_internal_nodes)
-            self.hidden_output_matrix = np.random.uniform(-output_bound, output_bound,(self.embedding_dim, self.num_internal_nodes)).astype(np.float32)
+        input_bound = np.sqrt(3.0 / self.embedding_dim)
+        output_bound = np.sqrt(3.0 / self.embedding_dim)
+        # input_hidden_matrix: (V_size, embedding_dim)
+        self.input_hidden_matrix = np.random.uniform(-input_bound, input_bound,(self.V_size, self.embedding_dim)).astype(np.float32)
+        # hidden_output_matrix: (embedding_dim, num_internal_nodes)
+        self.hidden_output_matrix = np.random.uniform(-output_bound, output_bound,(self.embedding_dim, self.num_internal_nodes)).astype(np.float32)
 
     def make_skipgram_training_pairs(self, token_ids, total_context_size: int):
         """
@@ -67,18 +67,8 @@ class OptimizedSkipgram:
 
         return pairs
 
-    def one_hot(self, word_id, V_size):
-        """
-        Builds a one-hot encoded vector for a given word (by id)
-        """
-        vector = np.zeros(V_size, dtype=np.float32)
-        vector[word_id] = 1.0
-
-        return vector
-
     def sigmoid(self, score):
         score = np.asarray(score, dtype=np.float32)
-
         prob = np.empty_like(score, dtype=np.float32)
 
         positive = score >= 0

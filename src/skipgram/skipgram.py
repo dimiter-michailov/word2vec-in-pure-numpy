@@ -10,7 +10,7 @@ class Skipgram:
             self.pairs = self.make_skipgram_training_pairs(token_ids, self.context_size)
 
             input_bound = np.sqrt(3.0 / self.embedding_dim)
-            output_bound = np.sqrt(3.0 / (self.context_size * self.embedding_dim))
+            output_bound = np.sqrt(3.0 / self.embedding_dim)
             # input_hidden_matrix: (V_size, embedding_dim)
             self.input_hidden_matrix = np.random.uniform(-input_bound, input_bound,(self.V_size, self.embedding_dim)).astype(np.float32)
             # hidden_output_matrix: (embedding_dim, V_size)
@@ -54,15 +54,6 @@ class Skipgram:
                 pairs.append(pair)
 
         return pairs
-
-    def one_hot(self, word_id, V_size):
-        """
-        Builds a one-hot encoded vector for a given word (by id)
-        """
-        vector = np.zeros(V_size, dtype=np.float32)
-        vector[word_id] = 1.0
-
-        return vector
 
     def softmax(self, output_vector):
         """

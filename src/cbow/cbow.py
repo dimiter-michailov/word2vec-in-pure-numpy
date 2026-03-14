@@ -9,7 +9,7 @@ class CBOW:
         self.l_rate = l_rate
         self.pairs = self.make_cbow_training_pairs(token_ids, self.context_size)
 
-        input_bound = np.sqrt(3.0 / (self.context_size * self.embedding_dim))
+        input_bound = np.sqrt(3.0 / self.embedding_dim)
         output_bound = np.sqrt(3.0 / self.embedding_dim)
         # input_hidden_matrix: (V_size, embedding_dim)
         self.input_hidden_matrix = np.random.uniform(-input_bound, input_bound,(self.V_size, self.embedding_dim)).astype(np.float32)
@@ -55,15 +55,6 @@ class CBOW:
 
         print("number of training pairs:", len(pairs))
         return pairs
-    
-    def one_hot(self, word_id, V_size):
-        """
-        Builds a one-hot encoded vector for a given word (by id)
-        """
-        vector = np.zeros(V_size, dtype=np.float32)
-        vector[word_id] = 1.0
-
-        return vector
 
     def softmax(self, output_vector):
         """
@@ -97,24 +88,15 @@ class CBOW:
     
     def feedforward(self, context, target):
         # to keep vector sum of all the words used in the context
-        context_sum = np.zeros(self.V_size, dtype=np.float32)
-
-        # sum the one-hot vectors of all context words
-        for word in context:
-            oh = self.one_hot(word, self.V_size)
-            context_sum = context_sum + oh
-        
-
-        context_size = int(context_sum.sum())
-        hidden = ((1 / context_size) * context_sum) @ self.input_hidden_matrix
+        hidden = np.mean(self.input_hidden_matrix[context], axis=0)
         pre_softmax = hidden @ self.hidden_output_matrix
         post_softmax = self.softmax(pre_softmax)
 
         E = self.loss_function(pre_softmax, target)
 
-        return context_sum, hidden, post_softmax, E
+        return hidden, post_softmax, E
 
-    def backpropagate(self, post_softmax, hidden, target, context_sum):
+    def backpropagate(self, post_softmax, hidden, target, context):
         """
         Applies one backpropagation step to the input_hidden_matrix and hidden_output_matrix for the given training pair.
         post_softmax : final class probabilities
@@ -123,9 +105,8 @@ class CBOW:
         context_sum : sum of all context word vectors
         """
         # dE/du_j = y_j - t_j
-        target_vector = np.zeros(len(post_softmax), dtype=np.float32)
-        target_vector[target] = 1.0
-        dE_du = post_softmax - target_vector
+        dE_du = post_softmax.copy()
+        dE_du[target] -= 1.0
 
         # dE/dw'ij = dE/du_j * h_i 
         # for the whole hidden_output_matrix
@@ -139,13 +120,11 @@ class CBOW:
 
         # dE/dh_i = SUM_j ( dE/du_j * w'ij )
         dE_dh = old_hidden_output_matrix @ dE_du
-
-        # dE/dw_ki = dE/dh_i * x_k
-        dE_d_input_hidden_matrix = np.outer(context_sum, dE_dh)
         
         # w_ki = w_ki - learning_rate * (1/C) * dE/dw_ki
-        context_size = int(context_sum.sum())
-        self.input_hidden_matrix -= self.l_rate * (1 / context_size) * dE_d_input_hidden_matrix
+        context_size = len(context)
+        for word in context:
+            self.input_hidden_matrix[word] -= self.l_rate * (1.0 / context_size) * dE_dh
 
     def train(self, epochs=1, start_lr=0.025, end_lr=0.0001, power=10.0):
         self.l_rate = start_lr
@@ -160,8 +139,8 @@ class CBOW:
                 context = p[0]
                 target = p[1]
 
-                context_sum, hidden, post_softmax, E = self.feedforward(context, target)
-                self.backpropagate(post_softmax, hidden, target, context_sum)
+                hidden, post_softmax, E = self.feedforward(context, target)
+                self.backpropagate(post_softmax, hidden, target, context)
 
                 total_loss = total_loss + E
                 if i % 50000 == 0:
