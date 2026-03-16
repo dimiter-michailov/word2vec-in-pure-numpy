@@ -18,7 +18,7 @@ In total, the repository contains the following six variants, located in `src/cb
 6. negative-sampling Skipgram — `src/skipgram/negative_skipgram.py`
 
 ## Main entry point
-- `main.py` — provides a CLI for selecting dataset, model family, variant, context size, word embedding size, and number of training epochs
+- `main.py` — provides a CLI for selecting the execution workflow, dataset, model family, model variant, context size, word embedding size, and number of training epochs
 
 ## Requirements
 Install dependencies with:
@@ -34,50 +34,47 @@ numpy
 markdown-pdf
 ```
 
-`markdown-pdf` is used to generate a .pdf report about the model's training results (more on that below).
+`markdown-pdf` is used to generate a .pdf report on the model's training results.
 
 ## How to run
 
 Run from the project root:
 
 ```bash
-python3 main.py
+python3 src/main.py
 ```
 
 Then provide the requested inputs in the CLI.
 
+### 0. Select workflow
+
+Choose one of:
+- `1` = train a new model configuration (standard run)
+- `2` = regenerate report from saved embeddings
+
+Option `2` requires the same dataset and model choices that were used when the saved embeddings file was created.
+
 ### 1. Dataset file name(s)
 
-When prompted, enter one or more dataset file names from the `datasets/` folder.
-
-Examples:
-
-```text
-shakespeare
-```
-
-or
-
-```text
-shakespeare, frankenstein, alice
-```
+When prompted, select one or more dataset files from the `datasets/` folder by number.
 
 ### 2. Model family
 
 Choose one of:
-- `cbow`
-- `skipgram`
+- `1` = `cbow`
+- `2` = `skipgram`
 
 ### 3. Model variant
 
 Choose one of:
-- `basic` = full softmax
-- `hs` = hierarchical softmax
-- `ns` = negative sampling
+- `1` = standard (no optimizations)
+- `2` = hierarchical softmax
+- `3` = negative sampling
 
 ### 4. Context size
 
 This is the total number of words surrounding the target (or input) center word in a single training example.
+Only even numbers are accepted.
 - context size `4` means 2 words on the left and 2 words on the right
 
 ### 5. Embedding size
@@ -90,11 +87,19 @@ This is the number of full passes over the training data provided in this run.
 
 ## Reporting
 
-After training, `src/reporting.py` prints nearest neighbors for 10 example words using cosine similarity.
+After training, the learned word embeddings (`input_hidden_matrix`) are also saved in the project root as a `.npy` file.
 
-The reported words are currently the first 10 words in vocabulary order.
+The `src/reporting.py` file prints nearest neighbors for 10 example words using cosine similarity.
 
-Additionally, for the datasets `text8`, `wiki_train`, and `wiki2_small`, the reporting provides evaluation of semantic and syntactic analogy questions (read more about this in `results.md`).
+The reported words are currently the first 10 words as created in the vocabulary.
+
+Additionally, for the datasets `text8`, `wiki_train`, and `wiki2_small`, the reporting can provide evaluation of semantic and syntactic analogy questions (read more about this in `results.md`).
+
+The exact analogy questions are located in:
+- `analogy_questions/custom_analogies.txt`
+- `analogy_questions/google_analogies.txt`
+
+To use additional analogy files, the current `main.py` logic needs to be changed.
 
 ## Expected run times
 The following timing results were recorded for 50,000 training samples with:
