@@ -10,7 +10,7 @@
 - variant: hierarchical softmax
 - embedding size: 80
 - context size: 4
-- epochs: 3
+- epochs: 1
 
 ## Nearest Neighbours
 A nearest-neighbour search starts with a query word, and for that query word, 
@@ -19,74 +19,74 @@ The words with the highest cosine similarity are displayed below.
 If the model learned meaningful structure, the displayed words should be related.
 
 ### york
-- jersey (0.7517)
-- yankees (0.6169)
-- knicks (0.6167)
-- orleans (0.5611)
-- zealand (0.5440)
+- jersey (0.7512)
+- zealand (0.5935)
+- orleans (0.5663)
+- yankees (0.5625)
+- hampshire (0.5523)
 
 ### city
-- lambton (0.5520)
-- town (0.5405)
-- dominion (0.5378)
-- council (0.5376)
-- southwestern (0.5334)
-
-### f
-- c (0.7367)
-- nf (0.5714)
-- xe (0.5557)
-- cl (0.5511)
-- xeof (0.5507)
-
-### c
-- f (0.7367)
-- g (0.6427)
-- nf (0.6262)
-- e (0.6189)
-- cl (0.5796)
+- building (0.5832)
+- council (0.5829)
+- state (0.5653)
+- town (0.5614)
+- centre (0.5489)
 
 ### season
-- sixth (0.5715)
-- episode (0.5604)
-- dreamscape (0.5524)
-- seasons (0.5488)
-- game (0.5455)
+- mlb (0.5895)
+- ninth (0.5572)
+- sixth (0.5540)
+- postseason (0.5539)
+- episode (0.5483)
 
 ### the
-- in (0.6204)
-- irish (0.6000)
-- of (0.5974)
-- whiskey (0.5967)
-- unk (0.5733)
+- in (0.5789)
+- irish (0.5496)
+- an (0.5330)
+- whiskey (0.5301)
+- of (0.5098)
 
 ### was
-- is (0.6616)
-- in (0.6094)
-- by (0.5688)
-- became (0.5630)
-- are (0.5605)
+- is (0.6795)
+- were (0.5631)
+- by (0.5445)
+- became (0.5422)
+- are (0.5420)
 
 ### unk
-- and (0.6983)
-- gaelic (0.6286)
-- in (0.6134)
-- as (0.6128)
-- whiskey (0.6080)
+- and (0.6597)
+- in (0.5981)
+- as (0.5735)
+- irish (0.5545)
+- gaelic (0.5531)
 
 ### of
-- and (0.7030)
-- with (0.6428)
-- in (0.6352)
-- irish (0.5987)
-- the (0.5974)
+- and (0.6235)
+- in (0.5912)
+- for (0.5763)
+- irish (0.5695)
+- with (0.5627)
 
 ### competitive
-- coaching (0.5270)
-- qualification (0.5004)
-- score (0.4941)
-- liverpool (0.4910)
-- match (0.4850)
+- players (0.5012)
+- controller (0.4610)
+- model (0.4596)
+- rating (0.4461)
+- pick (0.4312)
+
+### association
+- industry (0.6116)
+- recording (0.5732)
+- academy (0.5187)
+- sports (0.5137)
+- international (0.5062)
+
+### football
+- basketball (0.7117)
+- hockey (0.7065)
+- premier (0.6909)
+- baseball (0.6769)
+- league (0.6708)
 
 
 ## Datasets provided for analogy evaluation
@@ -115,7 +115,7 @@ and then searching for the word whose embedding is closest to that result.
 - **accuracy**: `correct / questions asked`
 
 ## Custom analogies
-This section is for `custom_analogies.txt`, which is my own analogy file. I followed the original analogy file format and created more basic questions that I considered suitable.
+This section is for `custom_analogies.txt`, which is my own analogy file. I followed the original analogy file format and created more basic questions that I considered suitable. More analogy questions could be added in the same format if desired.
 
 ### custom_analogies.txt
 
@@ -166,15 +166,15 @@ When this evaluation is run, the report shows:
 - questions in category: **506**
 - questions asked: **420**
 - skipped: **86**
-- correct: **10**
-- accuracy: **0.0238**
+- correct: **6**
+- accuracy: **0.0143**
 
 #### capital-world
 - questions in category: **4524**
 - questions asked: **758**
 - skipped: **3766**
-- correct: **24**
-- accuracy: **0.0317**
+- correct: **19**
+- accuracy: **0.0251**
 
 #### currency
 - questions in category: **866**
@@ -187,78 +187,78 @@ When this evaluation is run, the report shows:
 - questions in category: **2467**
 - questions asked: **1114**
 - skipped: **1353**
-- correct: **29**
-- accuracy: **0.0260**
+- correct: **21**
+- accuracy: **0.0189**
 
 #### family
 - questions in category: **506**
 - questions asked: **342**
 - skipped: **164**
-- correct: **24**
-- accuracy: **0.0702**
+- correct: **34**
+- accuracy: **0.0994**
 
 #### gram1-adjective-to-adverb
 - questions in category: **992**
 - questions asked: **702**
 - skipped: **290**
-- correct: **4**
-- accuracy: **0.0057**
+- correct: **2**
+- accuracy: **0.0028**
 
 #### gram2-opposite
 - questions in category: **812**
 - questions asked: **272**
 - skipped: **540**
-- correct: **4**
-- accuracy: **0.0147**
+- correct: **1**
+- accuracy: **0.0037**
 
 #### gram3-comparative
 - questions in category: **1332**
 - questions asked: **1056**
 - skipped: **276**
-- correct: **15**
-- accuracy: **0.0142**
+- correct: **20**
+- accuracy: **0.0189**
 
 #### gram4-superlative
 - questions in category: **1122**
 - questions asked: **506**
 - skipped: **616**
-- correct: **10**
-- accuracy: **0.0198**
+- correct: **3**
+- accuracy: **0.0059**
 
 #### gram5-present-participle
 - questions in category: **1056**
 - questions asked: **870**
 - skipped: **186**
-- correct: **24**
-- accuracy: **0.0276**
+- correct: **18**
+- accuracy: **0.0207**
 
 #### gram6-nationality-adjective
 - questions in category: **1599**
 - questions asked: **1160**
 - skipped: **439**
-- correct: **83**
-- accuracy: **0.0716**
+- correct: **79**
+- accuracy: **0.0681**
 
 #### gram7-past-tense
 - questions in category: **1560**
 - questions asked: **1482**
 - skipped: **78**
-- correct: **78**
-- accuracy: **0.0526**
+- correct: **56**
+- accuracy: **0.0378**
 
 #### gram8-plural
 - questions in category: **1332**
 - questions asked: **756**
 - skipped: **576**
-- correct: **15**
-- accuracy: **0.0198**
+- correct: **22**
+- accuracy: **0.0291**
 
 #### gram9-plural-verbs
 - questions in category: **870**
 - questions asked: **702**
 - skipped: **168**
-- correct: **11**
-- accuracy: **0.0157**
+- correct: **5**
+- accuracy: **0.0071**
 
 ### Summary by analogy type
 
@@ -266,12 +266,12 @@ When this evaluation is run, the report shows:
 - questions in file: **8869**
 - questions asked: **2704**
 - skipped: **6165**
-- correct: **87**
-- accuracy: **0.0322**
+- correct: **80**
+- accuracy: **0.0296**
 
 **Syntactic**
 - questions in file: **10675**
 - questions asked: **7506**
 - skipped: **3169**
-- correct: **244**
-- accuracy: **0.0325**
+- correct: **206**
+- accuracy: **0.0274**
