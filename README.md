@@ -18,7 +18,7 @@ In total, the repository contains the following six variants, located in `src/cb
 6. negative-sampling Skipgram — `src/skipgram/negative_skipgram.py`
 
 ## Main entry point
-- `main.py` — provides a CLI for selecting the execution workflow, dataset, model family, model variant, context size, word embedding size, and number of training epochs
+- `src/main.py` — provides a CLI for selecting the execution workflow, dataset, model family, model variant, context size, word embedding size, and number of training epochs
 
 ## Requirements
 Install dependencies with:
@@ -36,6 +36,14 @@ markdown-pdf
 
 `markdown-pdf` is used to generate a .pdf report on the model's training results.
 
+This repository also uses Git LFS for large files.
+
+To install Git LFS:
+2. Run:
+  ```bash
+  git lfs install
+  ```
+
 ## How to run
 
 Run from the project root:
@@ -52,7 +60,7 @@ Choose one of:
 - `1` = train a new model configuration (standard run)
 - `2` = regenerate report from saved embeddings
 
-Option `2` requires the same dataset and model choices that were used when the saved embeddings file was created.
+Option `2` loads the embeddings and parameters saved from the last training run - `last_run_embeddings.npz`.
 
 ### 1. Dataset file name(s)
 
@@ -87,7 +95,7 @@ This is the number of full passes over the training data provided in this run.
 
 ## Reporting
 
-After training, the learned word embeddings (`input_hidden_matrix`) are also saved in the project root as a `.npy` file.
+After training, the learned word embeddings (`input_hidden_matrix`) with the chosen run parameters are saved in the project root as `last_run_embeddings.npz`.
 
 The `src/reporting.py` file prints nearest neighbors for 10 example words using cosine similarity.
 
