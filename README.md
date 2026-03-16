@@ -38,13 +38,12 @@ markdown-pdf
 
 This repository also uses Git LFS for large files.
 
-To install Git LFS:
-2. Run:
+To install Git LFS run:
   ```bash
   git lfs install
   ```
 
-## How to run
+## How to run the code
 
 Run from the project root:
 
