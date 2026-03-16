@@ -1,0 +1,12 @@
+: comparative
+small smaller big bigger
+big bigger cold colder
+cold colder warm warmer
+quick quicker slow slower
+
+: family
+man woman king queen
+boy girl brother sister
+father mother uncle aunt
+brother sister son daughter
+husband wife man woman

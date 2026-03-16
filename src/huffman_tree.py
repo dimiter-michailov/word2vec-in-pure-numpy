@@ -1,5 +1,8 @@
 class HuffmanTree:
     def __init__(self, word_frequency):
+        """
+        Builds the Huffman tree based on the word frequencies to get the codes and paths for each word.
+        """
         self.V_size = len(word_frequency)
         self.word_frequency = word_frequency
 
@@ -18,6 +21,9 @@ class HuffmanTree:
         self.build_tree_start()
     
     def build_tree_start(self):
+        """ 
+        Starts the process of building the Huffman tree.
+        """
         if self.V_size == 0:
             return
 
@@ -26,25 +32,32 @@ class HuffmanTree:
             self.word_paths[0] = []
             return
         
+        # sort the word ids by frequency in ascending order
         self.sorted_word_ids_by_frequency = sorted(range(self.V_size), key=lambda word_id: self.word_frequency[word_id])
 
+        # initialize the first V_size nodes of the tree with the word frequencies
         for i in range(self.V_size):
             self.count.append(int(self.word_frequency[self.sorted_word_ids_by_frequency[i]]))
             self.code.append([])
             self.path_to_root.append([])
             self.leaves_under.append([i])
         
+        # smallest_leaf_node and smallest_internal_node are pointers to the next smallest leaf and internal nodes for merging
         smallest_leaf_node = 0
         smallest_internal_node = self.V_size
 
+        # build the full tree
         self.ok = self.build_tree_loop(smallest_leaf_node, smallest_internal_node)
         if self.ok:
             self.build_word_data()
 
     def build_tree_loop(self, smallest_leaf_node, smallest_internal_node):
-        # full tree has been built
+        """ 
+        Builds the Huffman tree using a loop.
+        """
+        # check if full tree has been built
         while len(self.count) < 2 * self.V_size - 1:
-            # first smallest node
+            # find the first smallest node
             if smallest_leaf_node < self.V_size and (smallest_internal_node >= len(self.count) or self.count[smallest_leaf_node] <= self.count[smallest_internal_node]):
                 min1 = smallest_leaf_node
                 smallest_leaf_node += 1
@@ -52,7 +65,7 @@ class HuffmanTree:
                 min1 = smallest_internal_node
                 smallest_internal_node += 1
 
-            # second smallest node
+            # find the second smallest node
             if smallest_leaf_node < self.V_size and (smallest_internal_node >= len(self.count) or self.count[smallest_leaf_node] <= self.count[smallest_internal_node]):
                 min2 = smallest_leaf_node
                 smallest_leaf_node += 1
@@ -60,7 +73,7 @@ class HuffmanTree:
                 min2 = smallest_internal_node
                 smallest_internal_node += 1
             
-            # create new internal node
+            # create new internal node by merging the two smallest nodes
             new_node_index = len(self.count)
             new_count = self.count[min1] + self.count[min2]
 
@@ -92,5 +105,6 @@ class HuffmanTree:
             for node_index in root_to_leaf_path:
                 internal_path.append(node_index - self.V_size) # map node_index to rows in the hidden_output_matrix
 
+            # store the code and path for this word
             self.word_codes[word_id] = root_to_leaf_code
             self.word_paths[word_id] = internal_path
