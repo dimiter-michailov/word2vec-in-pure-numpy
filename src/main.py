@@ -1,6 +1,4 @@
 import os
-import numpy as np
-from markdown_pdf import MarkdownPdf, Section
 from cbow.cbow import CBOW
 from cbow.hierarchical_cbow import HierarchicalCBOW
 from cbow.negative_cbow import NegativeCBOW
@@ -9,6 +7,27 @@ from skipgram.negative_skipgram import NegativeSkipgram
 from skipgram.skipgram import Skipgram
 from text_processing import TextProcessing
 from reporting import Reporting
+from run_storage import (EMBEDDINGS_DIR, build_run_metadata, build_scoreboard_row, choose_saved_embedding_file, 
+                         ensure_embeddings_dir, infer_run_metadata_from_embedding_file, upsert_scoreboard_row,)
+
+def ask_perform_analogy_evaluation():
+    """
+    Interactively asks whether analogy evaluation should be performed.
+    """
+    # analogy evaluation performs vector arithmetics to solve analogy questions of the form "a is to b as c is to ?" from the learned word embeddings.
+    # It can take a long time to run on larger vocabularies.
+    print("\nPerform analogy evaluation?")
+    print("1. Yes")
+    print("2. No")
+
+    while True:
+        analogy_choice = input("Type number: ").strip()
+        if analogy_choice == "1":
+            return True
+        elif analogy_choice == "2":
+            return False
+        else:
+            print("\nInvalid choice. Please try again.")
 
 def get_user_choices():
     """
@@ -72,140 +91,167 @@ def get_user_choices():
     embedding_dim = int(input("\nChoose the word embedding size. Type int: ").strip())
     epochs = int(input("\nChoose number of training epochs. Type int: ").strip())
 
-    # analogy evaluation performs vector arithmetics to solve analogy questions of the form "a is to b as c is to ?" from the learned word embeddings. 
-    # It can take a long time to run on larger vocabularies. 
-    print("\nPerform analogy evaluation?")
-    print("1. Yes")
-    print("2. No")
-    analogy_choice = input("Type number: ").strip()
-    perform_analogy_evaluation = analogy_choice == "1"
+    perform_analogy_evaluation = ask_perform_analogy_evaluation()
 
     return file_names, model_type, further_type, context_size, embedding_dim, epochs, perform_analogy_evaluation
 
+def create_model(model_type, further_type, token_ids, word_frequency, vocab_size, context_size, embedding_dim):
+    """
+    Main model selection logic.
+    """
+    if model_type == "cbow":
+        if further_type == "standard":
+            return CBOW(token_ids, vocab_size, context_size, embedding_dim)
+        elif further_type == "hierarchical softmax":
+            return HierarchicalCBOW(token_ids, word_frequency, vocab_size, context_size, embedding_dim)
+        elif further_type == "negative sampling":
+            return NegativeCBOW(token_ids, word_frequency, vocab_size, context_size, embedding_dim)
+
+    elif model_type == "skipgram":
+        if further_type == "standard":
+            return Skipgram(token_ids, vocab_size, context_size, embedding_dim)
+        elif further_type == "hierarchical softmax":
+            return HierarchicalSkipgram(token_ids, word_frequency, vocab_size, context_size, embedding_dim)
+        elif further_type == "negative sampling":
+            return NegativeSkipgram(token_ids, word_frequency, vocab_size, context_size, embedding_dim)
+
+    raise ValueError("Unsupported model configuration.")
+
 def main():
-    # single saved file from last run
-    saved_run_file = "last_run_embeddings.npz"
+    ensure_embeddings_dir()
 
     # initial user prompt to select workflow
     print("Select workflow:")
     print("1. Train a new model configuration (standard workflow)")
-    print("2. Generate report from saved embeddings")
+    print("2. Generate report from saved embeddings (.txt)")
     while True:
         run_choice = input("Type number: ").strip()
         if run_choice in {"1", "2"}:
             break
         print("\nInvalid choice. Please try again.")
-    
+
+    custom_summary = None
+    google_summary = None
+    custom_results_text = "Not run in this execution."
+    google_results_text = "Not run in this execution."
+
     # only in train workflow: get user choices for training and evaluation
     if run_choice == "1":
         file_names, model_type, further_type, context_size, embedding_dim, epochs, perform_analogy_evaluation = get_user_choices()
-    # load the saved embeddings and parameters from the last training run
-    else:
-        if not os.path.exists(saved_run_file):
-            raise FileNotFoundError(f"Saved embeddings file not found: {saved_run_file}")
 
-        saved_run = np.load(saved_run_file, allow_pickle=True)
+        # process the text
+        text_processor = TextProcessing(file_names)
+        token_ids = text_processor.token_ids
+        word_frequency = text_processor.word_frequency
+        print("\nnumber of tokens:", text_processor.token_count)
+        print("vocab size:", text_processor.V_size)
 
-        file_names = saved_run["file_names"].tolist()
-        model_type = str(saved_run["model_type"].item())
-        further_type = str(saved_run["further_type"].item())
-        context_size = int(saved_run["context_size"].item())
-        embedding_dim = int(saved_run["embedding_dim"].item())
-        epochs = int(saved_run["epochs"].item())
-        input_hidden_matrix = saved_run["input_hidden_matrix"]
-
-        print(f"\nLoaded saved embeddings from {saved_run_file}")
-        print("\nPerform analogy evaluation?")
-        print("1. Yes")
-        print("2. No")
-        analogy_choice = input("Type number: ").strip()
-        perform_analogy_evaluation = analogy_choice == "1"
-
-    # process the text
-    text_processor = TextProcessing(file_names)
-    token_ids = text_processor.token_ids
-    word_frequency = text_processor.word_frequency
-    print("\nnumber of tokens:", text_processor.token_count)
-    print("vocab size:", text_processor.V_size)
-
-    # main model selection logic
-    if run_choice == "1":
-        model = None
-        if model_type == "cbow":
-            if further_type == "standard":
-                model = CBOW(token_ids, text_processor.V_size, context_size, embedding_dim)
-            elif further_type == "hierarchical softmax":
-                model = HierarchicalCBOW(token_ids, word_frequency, text_processor.V_size, context_size, embedding_dim)
-            elif further_type == "negative sampling":
-                model = NegativeCBOW(token_ids, word_frequency, text_processor.V_size, context_size, embedding_dim)
-
-        elif model_type == "skipgram":
-            if further_type == "standard":
-                model = Skipgram(token_ids, text_processor.V_size, context_size, embedding_dim)
-            elif further_type == "hierarchical softmax":
-                model = HierarchicalSkipgram(token_ids, word_frequency, text_processor.V_size, context_size, embedding_dim)
-            elif further_type == "negative sampling":
-                model = NegativeSkipgram(token_ids, word_frequency, text_processor.V_size, context_size, embedding_dim)
+        # main model selection logic
+        model = create_model(
+            model_type=model_type,
+            further_type=further_type,
+            token_ids=token_ids,
+            word_frequency=word_frequency,
+            vocab_size=text_processor.V_size,
+            context_size=context_size,
+            embedding_dim=embedding_dim,
+        )
 
         model.train(epochs=epochs)
         input_hidden_matrix = model.input_hidden_matrix
 
-        np.savez(
-            saved_run_file,
-            input_hidden_matrix=input_hidden_matrix,
-            file_names=np.array(file_names, dtype=object),
+        # reporting generates the results and saves them in results.md
+        reporting = Reporting(text_processor.vocab, text_processor.V_size, input_hidden_matrix)
+
+        # save learned embeddings in standard word2vec text format
+        run_id, run_summary, embedding_path = build_run_metadata(
+            file_names=file_names,
             model_type=model_type,
             further_type=further_type,
             context_size=context_size,
             embedding_dim=embedding_dim,
             epochs=epochs,
         )
+        reporting.save_word2vec_txt(embedding_path)
 
-        print(f"\nSaved learned embeddings to {saved_run_file}")
+        print(f"\nSaved learned embeddings to {embedding_path}")
+
+        dataset_name = ", ".join(file_names)
+        token_count = text_processor.token_count
+        parameters_text = (
+            f"- run id: {run_id}\n"
+            f"- model: {model_type}\n"
+            f"- variant: {further_type}\n"
+            f"- embedding size: {embedding_dim}\n"
+            f"- context size: {context_size}\n"
+            f"- epochs: {epochs}\n"
+            f"- embedding file: {os.path.basename(embedding_path)}"
+        )
+
+    # load the saved embeddings and parameters from a selected .txt embedding file
     else:
-        if input_hidden_matrix.shape[0] != text_processor.V_size:
-            raise ValueError("\nCould not load saved embeddings.")
+        embedding_path = choose_saved_embedding_file()
+        vocab, input_hidden_matrix = Reporting.load_word2vec_txt(embedding_path)
 
-    # reporting generates the results and saves them in results.md
-    reporting = Reporting(text_processor.vocab, text_processor.V_size, input_hidden_matrix)
+        run_id, run_summary = infer_run_metadata_from_embedding_file(embedding_path)
+
+        print(f"\nLoaded saved embeddings from {embedding_path}")
+        print("vocab size:", len(vocab))
+        print("embedding size:", input_hidden_matrix.shape[1])
+
+        perform_analogy_evaluation = ask_perform_analogy_evaluation()
+
+        reporting = Reporting(vocab, len(vocab), input_hidden_matrix)
+
+        dataset_name = f"loaded from {os.path.basename(embedding_path)}"
+        token_count = "N/A"
+        parameters_text = (
+            f"- run id: {run_id}\n"
+            f"- embedding file: {os.path.basename(embedding_path)}\n"
+            f"- embedding size: {input_hidden_matrix.shape[1]}"
+        )
+
     reporting.print_example_neighbors()
     neighbors_text = reporting.report_neighbors()
 
-    custom_results_text = "Not run in this execution."
-    google_results_text = "Not run in this execution."
-
     if perform_analogy_evaluation:
         custom_categories = reporting.read_analogy_file("analogy_questions/custom_analogies.txt")
-        custom_results_text = reporting.evaluate_analogies(custom_categories, questions_file="custom_analogies.txt", top_k=1 )
+        custom_results_text, custom_summary = reporting.evaluate_analogies_with_summary(
+            custom_categories,
+            questions_file="custom_analogies.txt",
+            top_k=1,
+        )
+
         google_categories = reporting.read_analogy_file("analogy_questions/google_analogies.txt")
-        google_results_text = reporting.evaluate_analogies(google_categories, questions_file="google_analogies.txt", top_k=1 )
+        google_results_text, google_summary = reporting.evaluate_analogies_with_summary(
+            google_categories,
+            questions_file="google_analogies.txt",
+            top_k=1,
+        )
 
-    parameters_text = (
-        f"- model: {model_type}\n"
-        f"- variant: {further_type}\n"
-        f"- embedding size: {embedding_dim}\n"
-        f"- context size: {context_size}\n"
-        f"- epochs: {epochs}"
-    )
-
-    dataset_name = ", ".join(file_names)
     reporting.populate_results_template(
         dataset_name=dataset_name,
-        token_count=text_processor.token_count,
+        token_count=token_count,
         parameters_text=parameters_text,
         neighbors_text=neighbors_text,
         custom_results_text=custom_results_text,
         google_results_text=google_results_text
     )
 
-    # Generate also a .pdf from results.md
-    pdf = MarkdownPdf()
-    with open("results.md", "r") as f:
-        pdf.add_section(Section(f.read()))
-    pdf.save("results.pdf")
+    # update scoreboard only for a fresh model training run
+    if run_choice == "1":
+        scoreboard_row = build_scoreboard_row(
+            run_id=run_id,
+            run_summary=run_summary,
+            embedding_file_name=os.path.basename(embedding_path),
+            custom_summary=custom_summary,
+            google_summary=google_summary,
+        )
+        upsert_scoreboard_row(scoreboard_row)
+        print("\nscoreboard.csv has been updated.")
 
     print("\nThe full results produced by the model are available in results.md")
-    print("results.pdf is also available for preview.")
+    print(f"Embeddings are stored in {EMBEDDINGS_DIR}/")
 
 if __name__ == "__main__":
     main()

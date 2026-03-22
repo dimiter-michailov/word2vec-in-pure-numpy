@@ -17,7 +17,7 @@ In total, the repository contains the following six variants, located in `src/cb
 5. hierarchical Skipgram — `src/skipgram/hierarchical_skipgram.py`
 6. negative-sampling Skipgram — `src/skipgram/negative_skipgram.py`
 
-## Main entry point
+## Main entry point(s)
 - `src/main.py` — provides a CLI for selecting the execution workflow, dataset, model family, model variant, context size, word embedding size, and number of training epochs
 
 ## Requirements
@@ -31,17 +31,16 @@ Current `requirements.txt`:
 
 ```text
 numpy
-markdown-pdf
 ```
-
-`markdown-pdf` is used to generate a .pdf report on the model's training results.
 
 This repository also uses Git LFS for large files.
 
 To install Git LFS run:
-  ```bash
-  git lfs install
-  ```
+```bash
+git lfs install
+```
+
+Git LFS is used for large dataset files and can also be used for saved embedding files tracked in `saved_embeddings/`.
 
 ## How to run the code
 
@@ -57,9 +56,9 @@ Then provide the requested inputs in the CLI.
 
 Choose one of:
 - `1` = train a new model configuration (standard run)
-- `2` = regenerate report from saved embeddings
+- `2` = generate report from saved embeddings (`.txt`)
 
-Option `2` loads the embeddings and parameters saved from the last training run - `last_run_embeddings.npz`.
+Option `2` lets you choose any saved embedding file from the `saved_embeddings/` folder.
 
 ### 1. Dataset file name(s)
 
@@ -94,19 +93,21 @@ This is the number of full passes over the training data provided in this run.
 
 ## Reporting
 
-After training, the learned word embeddings (`input_hidden_matrix`) with the chosen run parameters are saved in the project root as `last_run_embeddings.npz`.
+After training, the learned word embeddings (`input_hidden_matrix`) are saved in `saved_embeddings/` as `.txt` files in standard word2vec text format.
 
-The `src/reporting.py` file prints nearest neighbors for 10 example words using cosine similarity.
+Furthermore, the `src/reporting.py` file prints in the console nearest neighbors for 10 example words using cosine similarity.
 
-The reported words are currently the first 10 words as created in the vocabulary.
+The reported words are currently the first 10 words in the vocabulary.
 
-Additionally, for the datasets `text8`, `wiki_train`, and `wiki2_small`, the reporting can provide evaluation of semantic and syntactic analogy questions (read more about this in `results.md`).
+Additionally, the reporting can provide evaluation of semantic and syntactic analogy questions (read more about this in `results.md`).
 
 The exact analogy questions are located in:
 - `analogy_questions/custom_analogies.txt`
 - `analogy_questions/google_analogies.txt`
 
 To use additional analogy files, the current `main.py` logic needs to be changed.
+
+A `scoreboard.csv` file is also maintained for fresh training runs. It stores a run summary together with the main analogy evaluation results. Nearest-neighbors are not included in the scoreboard.
 
 ## Expected run times
 The following timing results were recorded for 50,000 training samples with:
@@ -125,10 +126,16 @@ The following timing results were recorded for 50,000 training samples with:
 
 ## Other files in the repository
 
-Core data processing and reporting:
+Core data processing, reporting, and run storage:
 - `src/text_processing.py` — tokenization, vocabulary building, and other necessary text processing
-- `src/reporting.py` — nearest-neighbor reporting and semantic / syntactic analogy evaluation
+- `src/reporting.py` — nearest-neighbor reporting, analogy evaluation, and embedding `.txt` loading/saving
+- `src/run_storage.py` — saved embedding file management and scoreboard storage
 - `src/huffman_tree.py` — Huffman tree building for hierarchical softmax
+
+Saved outputs:
+- `saved_embeddings/` — saved word embedding files in standard word2vec text format
+- `scoreboard.csv` — run summaries and main analogy evaluation results
+- `results.md` — full report from the current execution
 
 Tests:
 - `tests/`

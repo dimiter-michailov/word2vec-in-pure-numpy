@@ -16,6 +16,104 @@ class Reporting:
         norms[norms == 0.0] = 1.0
         self.normalized_embeddings = self.input_hidden_matrix / norms
 
+    @staticmethod
+    def load_word2vec_txt(path):
+        """
+        Loads embeddings from a standard word2vec text-format file.
+
+        Supported format:
+        first line: <vocab_size> <embedding_dim>
+        next lines: word val1 val2 ... valN
+        """
+        words = []
+        vectors = []
+
+        with open(path, "r") as file:
+            first_line = file.readline()
+            if not first_line:
+                raise ValueError(f"Empty embeddings file: {path}")
+
+            first_parts = first_line.strip().split()
+
+            has_header = (
+                len(first_parts) == 2
+                and first_parts[0].isdigit()
+                and first_parts[1].isdigit()
+            )
+
+            expected_vocab_size = None
+            expected_dim = None
+
+            if has_header:
+                expected_vocab_size = int(first_parts[0])
+                expected_dim = int(first_parts[1])
+            else:
+                if len(first_parts) < 2:
+                    raise ValueError(f"Invalid first line in embeddings file: {path}")
+
+                word = first_parts[0]
+                vector = [float(value) for value in first_parts[1:]]
+                expected_dim = len(vector)
+
+                words.append(word)
+                vectors.append(vector)
+
+            for line_number, line in enumerate(file, start=2):
+                stripped = line.strip()
+                if not stripped:
+                    continue
+
+                parts = stripped.split()
+                if len(parts) < 2:
+                    raise ValueError(
+                        f"Invalid embedding row at line {line_number} in {path}"
+                    )
+
+                word = parts[0]
+                vector = [float(value) for value in parts[1:]]
+
+                if len(vector) != expected_dim:
+                    raise ValueError(
+                        f"Inconsistent embedding size at line {line_number} in {path}. "
+                        f"Expected {expected_dim}, got {len(vector)}."
+                    )
+
+                words.append(word)
+                vectors.append(vector)
+
+        if expected_vocab_size is not None and len(words) != expected_vocab_size:
+            raise ValueError(
+                f"Header says vocab size {expected_vocab_size}, "
+                f"but loaded {len(words)} rows from {path}."
+            )
+
+        if not words:
+            raise ValueError(f"No embeddings found in file: {path}")
+
+        vocab = {word: idx for idx, word in enumerate(words)}
+        input_hidden_matrix = np.array(vectors, dtype=np.float64)
+
+        return vocab, input_hidden_matrix
+
+    def save_word2vec_txt(self, path):
+        """
+        Saves embeddings in standard word2vec text format.
+
+        Format:
+        first line: <vocab_size> <embedding_dim>
+        next lines: word val1 val2 ... valN
+        """
+        embedding_dim = self.input_hidden_matrix.shape[1]
+
+        with open(path, "w", encoding="utf-8") as file:
+            file.write(f"{self.V_size} {embedding_dim}\n")
+
+            for idx in range(self.V_size):
+                word = self.id_to_word[idx]
+                vector = self.input_hidden_matrix[idx]
+                vector_text = " ".join(f"{float(value):.10f}" for value in vector)
+                file.write(f"{word} {vector_text}\n")
+
     def nearest_neighbors(self, word, top_k=5):
         """
         Returns the top_k nearest words to the given word
@@ -137,7 +235,7 @@ class Reporting:
         categories = {}
         current_category = None
 
-        with open(path, "r") as file:
+        with open(path, "r", encoding="utf-8") as file:
             for line in file:
                 line = line.strip().lower()
 
@@ -158,12 +256,13 @@ class Reporting:
 
         return categories
     
-    def evaluate_analogies(self, categories, questions_file, top_k=1):
+    def evaluate_analogies_with_summary(self, categories, questions_file, top_k=1):
         """
         Each category name is a list of analogy questions.
         Each question is a tuple:
         (a, b, c, d)
         This method provides a summary of the results per category and analogy type.
+        Returns both the markdown report text and a structured summary dictionary.
         """
         lines = []
 
@@ -235,6 +334,15 @@ class Reporting:
             if syntactic_questions_asked > 0 else 0.0
         )
 
+        overall_questions_in_file = semantic_questions_in_file + syntactic_questions_in_file
+        overall_questions_asked = semantic_questions_asked + syntactic_questions_asked
+        overall_correct = semantic_correct + syntactic_correct
+        overall_skipped = semantic_skipped + syntactic_skipped
+        overall_accuracy = (
+            overall_correct / overall_questions_asked
+            if overall_questions_asked > 0 else 0.0
+        )
+
         lines.append("### Summary by analogy type")
         lines.append("")
 
@@ -254,13 +362,55 @@ class Reporting:
         lines.append(f"- accuracy: **{syntactic_accuracy:.4f}**")
         lines.append("")
 
-        return "\n".join(lines)
+        lines.append("**Overall**")
+        lines.append(f"- questions in file: **{overall_questions_in_file}**")
+        lines.append(f"- questions asked: **{overall_questions_asked}**")
+        lines.append(f"- skipped: **{overall_skipped}**")
+        lines.append(f"- correct: **{overall_correct}**")
+        lines.append(f"- accuracy: **{overall_accuracy:.4f}**")
+        lines.append("")
+
+        summary = {
+            "questions_file": questions_file,
+            "overall": {
+                "questions_in_file": overall_questions_in_file,
+                "questions_asked": overall_questions_asked,
+                "skipped": overall_skipped,
+                "correct": overall_correct,
+                "accuracy": overall_accuracy,
+            },
+            "semantic": {
+                "questions_in_file": semantic_questions_in_file,
+                "questions_asked": semantic_questions_asked,
+                "skipped": semantic_skipped,
+                "correct": semantic_correct,
+                "accuracy": semantic_accuracy,
+            },
+            "syntactic": {
+                "questions_in_file": syntactic_questions_in_file,
+                "questions_asked": syntactic_questions_asked,
+                "skipped": syntactic_skipped,
+                "correct": syntactic_correct,
+                "accuracy": syntactic_accuracy,
+            },
+        }
+
+        return "\n".join(lines), summary
+
+    def evaluate_analogies(self, categories, questions_file, top_k=1):
+        """
+        Backward-compatible wrapper that returns only the markdown text.
+        """
+        report_text, _ = self.evaluate_analogies_with_summary(
+            categories, questions_file, top_k=top_k
+        )
+        return report_text
 
     def populate_results_template(self, dataset_name, token_count, parameters_text, neighbors_text, custom_results_text, google_results_text):
         """
         Fills the results template with the passed information and saves it to results.md
         """
-        with open("results_template.md", "r") as file:
+        with open("results_template.md", "r", encoding="utf-8") as file:
             template = file.read()
 
         filled = (
@@ -274,5 +424,5 @@ class Reporting:
             .replace("{{google_results_text}}", google_results_text)
         )
 
-        with open(self.results_path, "w") as file:
+        with open(self.results_path, "w", encoding="utf-8") as file:
             file.write(filled)

@@ -1,0 +1,2 @@
+run_id,run_summary,embedding_file,custom_correct,custom_questions_asked,custom_overall_accuracy,custom_semantic_accuracy,custom_syntactic_accuracy,google_correct,google_questions_asked,google_overall_accuracy,google_semantic_accuracy,google_syntactic_accuracy
+run_001,run_001 | datasets=text8.txt | model=skipgram | variant=hierarchical softmax | context=4 | dim=70 | epochs=3,run_001__text8__skipgram__hierarchical_softmax__ctx4__dim70__ep3.txt,1,9,0.1111,0.2000,0.0000,1377,19106,0.0721,0.0688,0.0747

@@ -42,7 +42,7 @@ and then searching for the word whose embedding is closest to that result.
 - **accuracy**: `correct / questions asked`
 
 ## Custom analogies
-This section is for `custom_analogies.txt`, which is my own analogy file. I followed the original analogy file format and created more basic questions that I considered suitable. More analogy questions could be added in the same format if desired.
+This section is for `custom_analogies.txt`, which is my own analogy file. I followed the original analogy file format and created a few basic questions that I considered suitable. More analogy questions could be added in the same format if desired.
 
 {{custom_results_text}}
 
