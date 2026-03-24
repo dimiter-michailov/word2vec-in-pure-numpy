@@ -1,18 +1,14 @@
 # Word2Vec Results
 
 ## Current run
-- Dataset(s) used in this run: `text8.txt`
+- Dataset(s) used in this run: `loaded from run_003__text8__skipgram__negative_sampling__ctx4__dim90__ep3.txt`
 - Vocabulary size: `253854`
-- Number of tokens produced from the dataset(s): `17005207`
+- Number of tokens produced from the dataset(s): `N/A`
 
 ### Parameters used in this run
-- run id: run_001
-- model: skipgram
-- variant: hierarchical softmax
-- embedding size: 70
-- context size: 4
-- epochs: 3
-- embedding file: run_001__text8__skipgram__hierarchical_softmax__ctx4__dim70__ep3.txt
+- run id: run_003
+- embedding file: run_003__text8__skipgram__negative_sampling__ctx4__dim90__ep3.txt
+- embedding size: 90
 
 ## Nearest Neighbours
 A nearest-neighbour search starts with a query word, and for that query word, 
@@ -21,74 +17,74 @@ The words with the highest cosine similarity are displayed below.
 If the model learned meaningful structure, the displayed words should be related.
 
 ### anarchism
-- anarcho (0.8091)
-- libertarianism (0.7962)
-- individualist (0.7545)
-- anarchist (0.7404)
-- liberalism (0.7338)
+- libertarianism (0.8284)
+- anarcho (0.8249)
+- individualist (0.8099)
+- collectivism (0.7928)
+- marxism (0.7859)
 
 ### originated
-- emerged (0.6801)
-- existed (0.6548)
-- canon (0.6322)
-- evolved (0.5920)
-- originating (0.5724)
+- emerged (0.7569)
+- originates (0.7410)
+- originating (0.7128)
+- arose (0.6990)
+- existed (0.6970)
 
 ### as
-- is (0.5474)
-- reasserts (0.5192)
-- by (0.5167)
-- almogavars (0.5163)
-- krasin (0.5160)
+- reconstituted (0.6914)
+- superpower (0.6824)
+- insofar (0.6783)
+- such (0.6648)
+- constituting (0.6524)
 
 ### term
-- however (0.5971)
-- concept (0.5821)
-- naevus (0.5732)
-- perestroika (0.5707)
-- when (0.5425)
+- coining (0.7282)
+- phrase (0.7167)
+- neologism (0.7153)
+- celt (0.7064)
+- isolationism (0.7036)
 
 ### of
-- and (0.5486)
-- the (0.5325)
-- masada (0.5196)
-- symbolizing (0.5167)
-- syrian (0.4962)
+- bloodiest (0.7231)
+- pdpa (0.7170)
+- reconquest (0.7111)
+- forfeiting (0.7076)
+- promulgation (0.7033)
 
 ### abuse
-- addiction (0.7187)
-- painkillers (0.6913)
-- involuntary (0.6839)
-- consensual (0.6785)
-- treatment (0.6399)
+- harassment (0.7510)
+- masturbation (0.7453)
+- incest (0.7380)
+- manslaughter (0.7309)
+- negligence (0.7305)
 
 ### first
-- following (0.5767)
-- new (0.5439)
-- last (0.5285)
-- third (0.5167)
-- hanwell (0.5006)
+- last (0.7470)
+- second (0.7192)
+- iala (0.7098)
+- third (0.7052)
+- homerun (0.7016)
 
 ### used
-- utilized (0.7305)
-- treated (0.6744)
-- regarded (0.6698)
-- labeled (0.6650)
-- seen (0.6549)
+- employed (0.8192)
+- utilized (0.7958)
+- invoked (0.7247)
+- touted (0.7069)
+- done (0.7035)
 
 ### against
-- while (0.6128)
-- with (0.5692)
-- non (0.5562)
-- nazi (0.5507)
-- towards (0.5473)
+- unleashing (0.6941)
+- loathed (0.6713)
+- incite (0.6677)
+- waged (0.6661)
+- instigated (0.6657)
 
 ### early
-- late (0.6711)
-- modern (0.5627)
-- eight (0.5190)
-- evangelizations (0.4972)
-- miseries (0.4712)
+- late (0.7943)
+- seventies (0.6733)
+- formative (0.6638)
+- earliest (0.6589)
+- palaeolithic (0.6561)
 
 
 ## Datasets provided for analogy evaluation
@@ -121,42 +117,56 @@ This section is for `custom_analogies.txt`, which is my own analogy file. I foll
 
 ### custom_analogies.txt
 
-#### comparative
-- questions in category: **4**
-- questions asked: **4**
+#### syntactic_comparative
+- questions in category: **5**
+- questions asked: **5**
+- skipped: **0**
+- correct: **2**
+- accuracy: **0.4000**
+
+#### semantic_family
+- questions in category: **5**
+- questions asked: **5**
+- skipped: **0**
+- correct: **3**
+- accuracy: **0.6000**
+
+#### syntactic_agent_noun
+- questions in category: **5**
+- questions asked: **5**
 - skipped: **0**
 - correct: **0**
 - accuracy: **0.0000**
 
-#### family
+#### semantic_person_place
 - questions in category: **5**
 - questions asked: **5**
 - skipped: **0**
-- correct: **1**
-- accuracy: **0.2000**
+- correct: **0**
+- accuracy: **0.0000**
 
 ### Summary by analogy type
 
 **Semantic**
-- questions in file: **5**
-- questions asked: **5**
+- questions in file: **10**
+- questions asked: **10**
 - skipped: **0**
-- correct: **1**
-- accuracy: **0.2000**
+- correct: **3**
+- accuracy: **0.3000**
 
 **Syntactic**
-- questions in file: **4**
-- questions asked: **4**
+- questions in file: **10**
+- questions asked: **10**
 - skipped: **0**
-- correct: **0**
-- accuracy: **0.0000**
+- correct: **2**
+- accuracy: **0.2000**
 
 **Overall**
-- questions in file: **9**
-- questions asked: **9**
+- questions in file: **20**
+- questions asked: **20**
 - skipped: **0**
-- correct: **1**
-- accuracy: **0.1111**
+- correct: **5**
+- accuracy: **0.2500**
 
 
 ## Google analogy questions
@@ -175,99 +185,99 @@ When this evaluation is run, the report shows:
 - questions in category: **506**
 - questions asked: **506**
 - skipped: **0**
-- correct: **81**
-- accuracy: **0.1601**
+- correct: **156**
+- accuracy: **0.3083**
 
 #### capital-world
 - questions in category: **4524**
 - questions asked: **4216**
 - skipped: **308**
-- correct: **248**
-- accuracy: **0.0588**
+- correct: **364**
+- accuracy: **0.0863**
 
 #### currency
 - questions in category: **866**
 - questions asked: **866**
 - skipped: **0**
-- correct: **10**
-- accuracy: **0.0115**
+- correct: **23**
+- accuracy: **0.0266**
 
 #### city-in-state
 - questions in category: **2467**
 - questions asked: **2467**
 - skipped: **0**
-- correct: **170**
-- accuracy: **0.0689**
+- correct: **413**
+- accuracy: **0.1674**
 
 #### family
 - questions in category: **506**
 - questions asked: **506**
 - skipped: **0**
-- correct: **80**
-- accuracy: **0.1581**
+- correct: **220**
+- accuracy: **0.4348**
 
 #### gram1-adjective-to-adverb
 - questions in category: **992**
 - questions asked: **992**
 - skipped: **0**
-- correct: **14**
-- accuracy: **0.0141**
+- correct: **34**
+- accuracy: **0.0343**
 
 #### gram2-opposite
 - questions in category: **812**
 - questions asked: **812**
 - skipped: **0**
-- correct: **23**
-- accuracy: **0.0283**
+- correct: **56**
+- accuracy: **0.0690**
 
 #### gram3-comparative
 - questions in category: **1332**
 - questions asked: **1332**
 - skipped: **0**
-- correct: **161**
-- accuracy: **0.1209**
+- correct: **497**
+- accuracy: **0.3731**
 
 #### gram4-superlative
 - questions in category: **1122**
 - questions asked: **992**
 - skipped: **130**
-- correct: **33**
-- accuracy: **0.0333**
+- correct: **119**
+- accuracy: **0.1200**
 
 #### gram5-present-participle
 - questions in category: **1056**
 - questions asked: **1056**
 - skipped: **0**
-- correct: **48**
-- accuracy: **0.0455**
+- correct: **166**
+- accuracy: **0.1572**
 
 #### gram6-nationality-adjective
 - questions in category: **1599**
 - questions asked: **1599**
 - skipped: **0**
-- correct: **287**
-- accuracy: **0.1795**
+- correct: **477**
+- accuracy: **0.2983**
 
 #### gram7-past-tense
 - questions in category: **1560**
 - questions asked: **1560**
 - skipped: **0**
-- correct: **56**
-- accuracy: **0.0359**
+- correct: **234**
+- accuracy: **0.1500**
 
 #### gram8-plural
 - questions in category: **1332**
 - questions asked: **1332**
 - skipped: **0**
-- correct: **133**
-- accuracy: **0.0998**
+- correct: **271**
+- accuracy: **0.2035**
 
 #### gram9-plural-verbs
 - questions in category: **870**
 - questions asked: **870**
 - skipped: **0**
-- correct: **33**
-- accuracy: **0.0379**
+- correct: **151**
+- accuracy: **0.1736**
 
 ### Summary by analogy type
 
@@ -275,19 +285,19 @@ When this evaluation is run, the report shows:
 - questions in file: **8869**
 - questions asked: **8561**
 - skipped: **308**
-- correct: **589**
-- accuracy: **0.0688**
+- correct: **1176**
+- accuracy: **0.1374**
 
 **Syntactic**
 - questions in file: **10675**
 - questions asked: **10545**
 - skipped: **130**
-- correct: **788**
-- accuracy: **0.0747**
+- correct: **2005**
+- accuracy: **0.1901**
 
 **Overall**
 - questions in file: **19544**
 - questions asked: **19106**
 - skipped: **438**
-- correct: **1377**
-- accuracy: **0.0721**
+- correct: **3181**
+- accuracy: **0.1665**

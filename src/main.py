@@ -8,7 +8,8 @@ from skipgram.skipgram import Skipgram
 from text_processing import TextProcessing
 from reporting import Reporting
 from run_storage import (EMBEDDINGS_DIR, build_run_metadata, build_scoreboard_row, choose_saved_embedding_file, 
-                         ensure_embeddings_dir, infer_run_metadata_from_embedding_file, upsert_scoreboard_row,)
+                         ensure_embeddings_dir, infer_run_metadata_from_embedding_file, is_embedding_logged,
+                         upsert_scoreboard_row,)
 
 def ask_perform_analogy_evaluation():
     """
@@ -238,8 +239,18 @@ def main():
         google_results_text=google_results_text
     )
 
-    # update scoreboard only for a fresh model training run
+    # update scoreboard for a fresh model training run
     if run_choice == "1":
+        scoreboard_row = build_scoreboard_row(
+            run_id=run_id,
+            run_summary=run_summary,
+            embedding_file_name=os.path.basename(embedding_path),
+            custom_summary=custom_summary,
+            google_summary=google_summary,
+        )
+        upsert_scoreboard_row(scoreboard_row)
+        print("\nscoreboard.csv has been updated.")
+    elif perform_analogy_evaluation and not is_embedding_logged(os.path.basename(embedding_path)):
         scoreboard_row = build_scoreboard_row(
             run_id=run_id,
             run_summary=run_summary,

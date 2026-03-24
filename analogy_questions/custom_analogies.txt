@@ -1,12 +1,27 @@
-: comparative
+: syntactic_comparative
 small smaller big bigger
 big bigger cold colder
 cold colder warm warmer
 quick quicker slow slower
+tall taller short shorter
 
-: family
+: semantic_family
 man woman king queen
 boy girl brother sister
 father mother uncle aunt
 brother sister son daughter
 husband wife man woman
+
+: syntactic_agent_noun
+teach teacher drive driver
+drive driver paint painter
+paint painter write writer
+write writer farm farmer
+farm farmer teach teacher
+
+: semantic_person_place
+doctor hospital teacher school
+teacher school farmer farm
+farmer farm waiter restaurant
+waiter restaurant doctor hospital
+nurse hospital teacher school

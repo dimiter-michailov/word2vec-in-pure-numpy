@@ -256,6 +256,15 @@ class Reporting:
 
         return categories
     
+    def is_semantic_category(self, category_name):
+        if category_name.startswith("semantic_"):
+            return True
+        if category_name.startswith("syntactic_"):
+            return False
+
+        semantic_categories = {"capital-common-countries", "capital-world", "currency", "city-in-state", "family"}
+        return category_name in semantic_categories
+    
     def evaluate_analogies_with_summary(self, categories, questions_file, top_k=1):
         """
         Each category name is a list of analogy questions.
@@ -265,8 +274,6 @@ class Reporting:
         Returns both the markdown report text and a structured summary dictionary.
         """
         lines = []
-
-        semantic_categories = {"capital-common-countries", "capital-world", "currency", "city-in-state", "family"}
 
         semantic_questions_in_file = 0
         semantic_questions_asked = 0
@@ -313,7 +320,7 @@ class Reporting:
             lines.append(f"- accuracy: **{accuracy:.4f}**")
             lines.append("")
 
-            if category_name in semantic_categories:
+            if self.is_semantic_category(category_name):
                 semantic_questions_in_file += questions_in_file
                 semantic_questions_asked += questions_asked
                 semantic_correct += correct

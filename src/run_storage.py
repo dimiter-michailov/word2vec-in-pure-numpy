@@ -149,6 +149,18 @@ def build_scoreboard_row(run_id, run_summary, embedding_file_name, custom_summar
         "google_syntactic_accuracy": scoreboard_value(google_summary, "syntactic", "accuracy"),
     }
 
+def is_embedding_logged(embedding_file_name):
+    if not os.path.exists(SCOREBOARD_FILE):
+        return False
+
+    with open(SCOREBOARD_FILE, "r", newline="", encoding="utf-8") as file:
+        reader = csv.DictReader(file)
+        for existing_row in reader:
+            if existing_row.get("embedding_file") == embedding_file_name:
+                return True
+
+    return False
+
 def upsert_scoreboard_row(row):
     rows = []
 

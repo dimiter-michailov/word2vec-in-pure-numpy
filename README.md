@@ -124,6 +124,13 @@ The following timing results were recorded for 50,000 training samples with:
 - Skipgram with Hierarchical Softmax: 15.49 sec
 - Skipgram with Negative Sampling: 22.39 sec
 
+## Discussion of results
+Although the nearest-neighbor results do not provide a systematic evaluation and are, by observation, not consistently of the best quality, they still act as a meaningful signal that some relational structure is being learned: semantically and syntactically similar words are grouped together in the learned vector space.
+
+For that reason, the Google semantic and syntactic analogy questions provide a more systematic quality check for the learned embeddings. The best accuracies observed so far are in the low double digits, but still strong evidence that non-random structure is being learned, since answering these questions correctly by chance is improbable.
+
+The main limiting factors are dataset size and the time complexity of training, which make it impractical on a regular computer to reach the benchmarks reported in the original Word2Vec paper.
+
 ## Other files in the repository
 
 Core data processing, reporting, and run storage:
